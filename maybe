@@ -1,0 +1,42 @@
+```yaml
+name: Build Windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.2'
+          arch: 'win64_mingw'
+          cache: true
+
+      - name: Configure CMake
+        shell: pwsh
+        run: |
+          cmake -S . -B build `
+            -G "MinGW Makefiles" `
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Deploy Qt libraries
+        shell: pwsh
+        run: |
+          windeployqt build\wolknerprotocol.exe
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WolknerProtocol-Windows
+          path: build/
+```
